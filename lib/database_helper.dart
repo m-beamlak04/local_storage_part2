@@ -1,6 +1,8 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
+import 'folder.dart';
+import 'card_record.dart';
 
 class DatabaseHelper {
   static const _databaseName = "MyDatabase.db";
@@ -111,5 +113,75 @@ $columnAge INTEGER NOT NULL
   // returned. This should be 1 as long as the row exists.
   Future<int> delete(int id) async {
     return await _db.delete(table, where: '$columnId = ?', whereArgs: [id]);
+  }
+
+  // Insert a new folder.
+  Future<int> insertFolder(Folder folder) async {
+    return await _db.insert('folders', folder.toMap());
+  }
+
+// Get all folders along with their card counts.
+  Future<List<Map<String, dynamic>>> getFoldersWithCounts() async {
+    return await _db.rawQuery('''
+    SELECT folders.id,
+           folders.name,
+           folders.created_at,
+           COUNT(cards.id) AS card_count
+    FROM folders
+    LEFT JOIN cards ON cards.folder_id = folders.id
+    GROUP BY folders.id, folders.name, folders.created_at
+    ORDER BY folders.name COLLATE NOCASE ASC
+  ''');
+  }
+
+// Delete a folder using its ID.
+  Future<int> deleteFolder(int folderId) async {
+    return await _db.delete(
+      'folders',
+      where: 'id = ?',
+      whereArgs: [folderId],
+    );
+  }
+
+  // Add a card to a folder.
+  Future<int> insertCard(CardRecord card) async {
+    return await _db.insert('cards', card.toMap());
+  }
+
+// Get cards belonging to one folder.
+  Future<List<CardRecord>> getCards(int folderId) async {
+    final rows = await _db.query(
+      'cards',
+      where: 'folder_id = ?',
+      whereArgs: [folderId],
+      orderBy: 'title COLLATE NOCASE ASC',
+    );
+
+    return rows.map((row) => CardRecord.fromMap(row)).toList();
+  }
+
+// Update an existing card using its ID.
+  Future<int> updateCard(CardRecord card) async {
+    if (card.id == null) {
+      throw ArgumentError('Cannot update a card without an ID');
+    }
+
+    final values = card.toMap()..remove('id');
+
+    return await _db.update(
+      'cards',
+      values,
+      where: 'id = ?',
+      whereArgs: [card.id],
+    );
+  }
+
+// Delete a card using its ID.
+  Future<int> deleteCard(int cardId) async {
+    return await _db.delete(
+      'cards',
+      where: 'id = ?',
+      whereArgs: [cardId],
+    );
   }
 }
