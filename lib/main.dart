@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
+import 'folders_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -262,6 +263,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fall Festival Roster'),
+        actions: [
+          IconButton(
+            tooltip: 'Open Card Folders',
+            icon: const Icon(Icons.folder_open),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      FoldersScreen(helper: widget.helper),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(
