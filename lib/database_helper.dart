@@ -1,6 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
+
 import 'folder.dart';
 import 'card_record.dart';
 
@@ -120,7 +121,7 @@ $columnAge INTEGER NOT NULL
     return await _db.insert('folders', folder.toMap());
   }
 
-// Get all folders along with their card counts.
+  // Get all folders along with their card counts.
   Future<List<Map<String, dynamic>>> getFoldersWithCounts() async {
     return await _db.rawQuery('''
     SELECT folders.id,
@@ -134,13 +135,9 @@ $columnAge INTEGER NOT NULL
   ''');
   }
 
-// Delete a folder using its ID.
+  // Delete a folder using its ID.
   Future<int> deleteFolder(int folderId) async {
-    return await _db.delete(
-      'folders',
-      where: 'id = ?',
-      whereArgs: [folderId],
-    );
+    return await _db.delete('folders', where: 'id = ?', whereArgs: [folderId]);
   }
 
   // Add a card to a folder.
@@ -148,7 +145,7 @@ $columnAge INTEGER NOT NULL
     return await _db.insert('cards', card.toMap());
   }
 
-// Get cards belonging to one folder.
+  // Get cards belonging to one folder.
   Future<List<CardRecord>> getCards(int folderId) async {
     final rows = await _db.query(
       'cards',
@@ -160,7 +157,7 @@ $columnAge INTEGER NOT NULL
     return rows.map((row) => CardRecord.fromMap(row)).toList();
   }
 
-// Update an existing card using its ID.
+  // Update an existing card using its ID.
   Future<int> updateCard(CardRecord card) async {
     if (card.id == null) {
       throw ArgumentError('Cannot update a card without an ID');
@@ -176,12 +173,8 @@ $columnAge INTEGER NOT NULL
     );
   }
 
-// Delete a card using its ID.
+  // Delete a card using its ID.
   Future<int> deleteCard(int cardId) async {
-    return await _db.delete(
-      'cards',
-      where: 'id = ?',
-      whereArgs: [cardId],
-    );
+    return await _db.delete('cards', where: 'id = ?', whereArgs: [cardId]);
   }
 }

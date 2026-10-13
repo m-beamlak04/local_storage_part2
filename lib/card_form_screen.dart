@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+
 import 'database_helper.dart';
 import 'card_record.dart';
 
@@ -25,12 +25,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
   final _notesController = TextEditingController();
   final _imageController = TextEditingController();
 
-  static const _suits = [
-    'Hearts',
-    'Diamonds',
-    'Clubs',
-    'Spades',
-  ];
+  static const _suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
 
   String? _selectedSuit;
   int? _selectedFolderId;
@@ -123,9 +118,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save card. Please try again.'),
-        ),
+        const SnackBar(content: Text('Could not save card. Please try again.')),
       );
 
       debugPrint('Card save failed: $error');
@@ -147,130 +140,118 @@ class _CardFormScreenState extends State<CardFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Card' : 'Add Card'),
-      ),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Card' : 'Add Card')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
           ? Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_errorMessage!),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                setState(() => _isLoading = true);
-                _loadFolders();
-              },
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      )
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_errorMessage!),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() => _isLoading = true);
+                      _loadFolders();
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
           : Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Card title',
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Enter a card title';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedSuit,
-              decoration: const InputDecoration(
-                labelText: 'Suit',
-              ),
-              items: _suits.map((suit) {
-                return DropdownMenuItem(
-                  value: suit,
-                  child: Text(suit),
-                );
-              }).toList(),
-              onChanged: _isSaving
-                  ? null
-                  : (value) {
-                setState(() => _selectedSuit = value);
-              },
-              validator: (value) {
-                if (value == null || !_suits.contains(value)) {
-                  return 'Select a valid suit';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              initialValue: _folders.any(
-                    (folder) => folder['id'] == _selectedFolderId,
-              )
-                  ? _selectedFolderId
-                  : null,
-              decoration: const InputDecoration(
-                labelText: 'Folder',
-              ),
-              items: _folders.map((folder) {
-                return DropdownMenuItem<int>(
-                  value: folder['id'] as int,
-                  child: Text(folder['name'].toString()),
-                );
-              }).toList(),
-              onChanged: _isSaving
-                  ? null
-                  : (value) {
-                setState(() => _selectedFolderId = value);
-              },
-              validator: (value) {
-                if (value == null ||
-                    !_folders.any(
-                          (folder) => folder['id'] == value,
-                    )) {
-                  return 'Select a valid folder';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _notesController,
-              minLines: 1,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _imageController,
-              decoration: const InputDecoration(
-                labelText: 'Image reference (optional)',
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _saveCard,
-              child: Text(
-                _isSaving
-                    ? 'Saving...'
-                    : _isEditing
-                    ? 'Save Changes'
-                    : 'Add Card',
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(labelText: 'Card title'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter a card title';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedSuit,
+                    decoration: const InputDecoration(labelText: 'Suit'),
+                    items: _suits.map((suit) {
+                      return DropdownMenuItem(value: suit, child: Text(suit));
+                    }).toList(),
+                    onChanged: _isSaving
+                        ? null
+                        : (value) {
+                            setState(() => _selectedSuit = value);
+                          },
+                    validator: (value) {
+                      if (value == null || !_suits.contains(value)) {
+                        return 'Select a valid suit';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    initialValue:
+                        _folders.any(
+                          (folder) => folder['id'] == _selectedFolderId,
+                        )
+                        ? _selectedFolderId
+                        : null,
+                    decoration: const InputDecoration(labelText: 'Folder'),
+                    items: _folders.map((folder) {
+                      return DropdownMenuItem<int>(
+                        value: folder['id'] as int,
+                        child: Text(folder['name'].toString()),
+                      );
+                    }).toList(),
+                    onChanged: _isSaving
+                        ? null
+                        : (value) {
+                            setState(() => _selectedFolderId = value);
+                          },
+                    validator: (value) {
+                      if (value == null ||
+                          !_folders.any((folder) => folder['id'] == value)) {
+                        return 'Select a valid folder';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _notesController,
+                    minLines: 1,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes (optional)',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _imageController,
+                    decoration: const InputDecoration(
+                      labelText: 'Image reference (optional)',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _isSaving ? null : _saveCard,
+                    child: Text(
+                      _isSaving
+                          ? 'Saving...'
+                          : _isEditing
+                          ? 'Save Changes'
+                          : 'Add Card',
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

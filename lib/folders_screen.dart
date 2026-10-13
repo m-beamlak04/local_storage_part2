@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'database_helper.dart';
 import 'folder.dart';
 import 'cards_screen.dart';
@@ -48,44 +49,9 @@ class _FoldersScreenState extends State<FoldersScreen> {
   }
 
   Future<void> _addFolder() async {
-    final controller = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
     final name = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Add Folder'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Folder name',
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Enter a folder name';
-              }
-              return null;
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(dialogContext, controller.text.trim());
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) => const _AddFolderDialog(),
     );
 
     if (name == null || !mounted) return;
@@ -94,10 +60,7 @@ class _FoldersScreenState extends State<FoldersScreen> {
 
     try {
       await widget.helper.insertFolder(
-        Folder(
-          name: name,
-          createdAt: DateTime.now().toIso8601String(),
-        ),
+        Folder(name: name, createdAt: DateTime.now().toIso8601String()),
       );
 
       await _loadFolders();
@@ -123,9 +86,7 @@ class _FoldersScreenState extends State<FoldersScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Folder'),
-        content: Text(
-          'Delete "$name" and all cards inside it?',
-        ),
+        content: Text('Delete "$name" and all cards inside it?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -158,9 +119,9 @@ class _FoldersScreenState extends State<FoldersScreen> {
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not delete folder.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not delete folder.')));
       debugPrint('Folder delete failed: $error');
     } finally {
       if (mounted) setState(() => _isBusy = false);
@@ -188,56 +149,105 @@ class _FoldersScreenState extends State<FoldersScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
           ? Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_errorMessage!),
-            ElevatedButton(
-              onPressed: _loadFolders,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      )
-          : _folders.isEmpty
-          ? const Center(
-        child: Text('No folders yet. Tap + to add one.'),
-      )
-          : ListView.builder(
-        itemCount: _folders.length,
-        itemBuilder: (context, index) {
-          final folder = _folders[index];
-          final count = folder['card_count'] ?? 0;
-
-          return ListTile(
-            title: Text(folder['name'].toString()),
-            subtitle: Text('$count cards'),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _isBusy
-                  ? null
-                  : () => _deleteFolder(folder),
-            ),
-            onTap: _isBusy
-                ? null
-                : () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CardsScreen(
-                    helper: widget.helper,
-                    folderId: folder['id'] as int,
-                    folderName: folder['name'].toString(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_errorMessage!),
+                  ElevatedButton(
+                    onPressed: _loadFolders,
+                    child: const Text('Retry'),
                   ),
-                ),
-              );
+                ],
+              ),
+            )
+          : _folders.isEmpty
+          ? const Center(child: Text('No folders yet. Tap + to add one.'))
+          : ListView.builder(
+              itemCount: _folders.length,
+              itemBuilder: (context, index) {
+                final folder = _folders[index];
+                final count = folder['card_count'] ?? 0;
 
-              if (!mounted) return;
-              await _loadFolders();
-            },
-          );
-        },
+                return ListTile(
+                  title: Text(folder['name'].toString()),
+                  subtitle: Text('$count cards'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: _isBusy ? null : () => _deleteFolder(folder),
+                  ),
+                  onTap: _isBusy
+                      ? null
+                      : () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CardsScreen(
+                                helper: widget.helper,
+                                folderId: folder['id'] as int,
+                                folderName: folder['name'].toString(),
+                              ),
+                            ),
+                          );
+
+                          if (!mounted) return;
+                          await _loadFolders();
+                        },
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _AddFolderDialog extends StatefulWidget {
+  const _AddFolderDialog();
+
+  @override
+  State<_AddFolderDialog> createState() => _AddFolderDialogState();
+}
+
+class _AddFolderDialogState extends State<_AddFolderDialog> {
+  final _controller = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add Folder'),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Folder name'),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Enter a folder name';
+            }
+            return null;
+          },
+        ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              Navigator.pop(context, _controller.text.trim());
+            }
+          },
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

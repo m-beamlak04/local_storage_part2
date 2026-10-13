@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'database_helper.dart';
 import 'folders_screen.dart';
 
@@ -12,15 +13,17 @@ Future<void> main() async {
   } catch (error, stackTrace) {
     debugPrint('Database initialization failed: $error\n$stackTrace');
 
-    runApp(const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text(
-            'Could not open local storage. Restart the app and check the logs.',
+    runApp(
+      const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text(
+              'Could not open local storage. Restart the app and check the logs.',
+            ),
           ),
         ),
       ),
-    ));
+    );
     return;
   }
 
@@ -30,10 +33,7 @@ Future<void> main() async {
 class DirectoryApp extends StatelessWidget {
   final DatabaseHelper helper;
 
-  const DirectoryApp({
-    super.key,
-    required this.helper,
-  });
+  const DirectoryApp({super.key, required this.helper});
 
   @override
   Widget build(BuildContext context) {
@@ -47,10 +47,7 @@ class DirectoryApp extends StatelessWidget {
 class DirectoryScreen extends StatefulWidget {
   final DatabaseHelper helper;
 
-  const DirectoryScreen({
-    super.key,
-    required this.helper,
-  });
+  const DirectoryScreen({super.key, required this.helper});
 
   @override
   State<DirectoryScreen> createState() => _DirectoryScreenState();
@@ -149,15 +146,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _selectedId = null;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Database result: $affected')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Database result: $affected')));
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save guest.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Could not save guest.')));
 
       debugPrint('Database write failed: $error');
     } finally {
@@ -172,10 +167,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void _startEdit(Map<String, dynamic> row) {
     setState(() {
       _selectedId = row[DatabaseHelper.columnId] as int;
-      _nameController.text =
-          row[DatabaseHelper.columnName].toString();
-      _ageController.text =
-          row[DatabaseHelper.columnAge].toString();
+      _nameController.text = row[DatabaseHelper.columnName].toString();
+      _ageController.text = row[DatabaseHelper.columnAge].toString();
     });
   }
 
@@ -238,15 +231,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         }
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Database result: $deleted')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Database result: $deleted')));
     } catch (error) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not delete guest.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not delete guest.')));
 
       debugPrint('Database delete failed: $error');
     } finally {
@@ -271,8 +263,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      FoldersScreen(helper: widget.helper),
+                  builder: (context) => FoldersScreen(helper: widget.helper),
                 ),
               );
             },
@@ -280,122 +271,124 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
-        child: CircularProgressIndicator(),
-      )
+          ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
           ? Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_errorMessage!),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _isBusy ? null : _loadRows,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      )
-          : Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Enter a name';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _ageController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Age',
-                ),
-                validator: (value) {
-                  final age = int.tryParse(value?.trim() ?? '');
-
-                  if (age == null) {
-                    return 'Enter a whole number';
-                  }
-
-                  if (age < 0 || age > 130) {
-                    return 'Age must be between 0 and 130';
-                  }
-
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              ElevatedButton(
-                onPressed: _isBusy ? null : _saveGuest,
-                child: Text(_selectedId == null ? 'Add Guest' : 'Save Changes'),
-              ),
-
-              if (_selectedId != null) ...[
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: _isBusy ? null : _cancelEdit,
-                  child: const Text('Cancel Edit'),
-                ),
-              ],
-
-              const SizedBox(height: 8),
-
-              ElevatedButton(
-                onPressed: _isBusy ? null : _loadRows,
-                child: const Text('Refresh'),
-              ),
-
-              const SizedBox(height: 16),
-
-              Text('Record count: $_count'),
-              const SizedBox(height: 16),
-              if (_rows.isEmpty)
-                const Text('No festival guests yet')
-              else
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _rows.length,
-                    itemBuilder: (context, index) {
-                      final row = _rows[index];
-
-                      return ListTile(
-                        title: Text(row[DatabaseHelper.columnName].toString()),
-                        subtitle: Text(
-                          'ID: ${row[DatabaseHelper.columnId]} | Age: ${row[DatabaseHelper.columnAge]}',
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: _isBusy ? null : () => _startEdit(row),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: _isBusy ? null : () => _deleteGuest(row),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_errorMessage!),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _isBusy ? null : _loadRows,
+                    child: const Text('Retry'),
                   ),
+                ],
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(labelText: 'Name'),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Enter a name';
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: _ageController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Age'),
+                      validator: (value) {
+                        final age = int.tryParse(value?.trim() ?? '');
+
+                        if (age == null) {
+                          return 'Enter a whole number';
+                        }
+
+                        if (age < 0 || age > 130) {
+                          return 'Age must be between 0 and 130';
+                        }
+
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    ElevatedButton(
+                      onPressed: _isBusy ? null : _saveGuest,
+                      child: Text(
+                        _selectedId == null ? 'Add Guest' : 'Save Changes',
+                      ),
+                    ),
+
+                    if (_selectedId != null) ...[
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: _isBusy ? null : _cancelEdit,
+                        child: const Text('Cancel Edit'),
+                      ),
+                    ],
+
+                    const SizedBox(height: 8),
+
+                    ElevatedButton(
+                      onPressed: _isBusy ? null : _loadRows,
+                      child: const Text('Refresh'),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Text('Record count: $_count'),
+                    const SizedBox(height: 16),
+                    if (_rows.isEmpty)
+                      const Text('No festival guests yet')
+                    else
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _rows.length,
+                          itemBuilder: (context, index) {
+                            final row = _rows[index];
+
+                            return ListTile(
+                              title: Text(
+                                row[DatabaseHelper.columnName].toString(),
+                              ),
+                              subtitle: Text(
+                                'ID: ${row[DatabaseHelper.columnId]} | Age: ${row[DatabaseHelper.columnAge]}',
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: _isBusy
+                                        ? null
+                                        : () => _startEdit(row),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: _isBusy
+                                        ? null
+                                        : () => _deleteGuest(row),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 }

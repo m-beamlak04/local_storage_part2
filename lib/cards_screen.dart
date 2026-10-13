@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'database_helper.dart';
 import 'card_record.dart';
 import 'card_form_screen.dart';
@@ -59,6 +60,49 @@ class _CardsScreenState extends State<CardsScreen> {
     }
   }
 
+  Future<void> _deleteCard(CardRecord card) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Card'),
+        content: Text('Delete "${card.title}" (ID ${card.id})?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final deleted = await widget.helper.deleteCard(card.id!);
+
+      if (!mounted) return;
+
+      if (deleted == 0) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Card no longer exists.')));
+      }
+
+      await _loadCards();
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not delete card.')));
+      debugPrint('Card deletion failed: $error');
+    }
+  }
+
   Future<void> _editCard(CardRecord card) async {
     final saved = await Navigator.push<bool>(
       context,
@@ -82,10 +126,8 @@ class _CardsScreenState extends State<CardsScreen> {
     final saved = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => CardFormScreen(
-          helper: widget.helper,
-          folderId: widget.folderId,
-        ),
+        builder: (context) =>
+            CardFormScreen(helper: widget.helper, folderId: widget.folderId),
       ),
     );
 
@@ -94,6 +136,35 @@ class _CardsScreenState extends State<CardsScreen> {
     if (saved == true) {
       await _loadCards();
     }
+  }
+
+  Widget _cardImage(CardRecord card) {
+    final reference = card.imageRef?.trim() ?? '';
+    final fallback = Center(
+      child: Text(_suitSymbol(card.suit), style: const TextStyle(fontSize: 28)),
+    );
+
+    if (reference.isEmpty) {
+      return fallback;
+    }
+
+    if (reference.startsWith('https://') || reference.startsWith('http://')) {
+      return Image.network(
+        reference,
+        width: 48,
+        height: 48,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      );
+    }
+
+    return Image.asset(
+      reference,
+      width: 48,
+      height: 48,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => fallback,
+    );
   }
 
   String _suitSymbol(String suit) {
@@ -132,44 +203,51 @@ class _CardsScreenState extends State<CardsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
           ? Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_errorMessage!),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _loadCards,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      )
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_errorMessage!),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _loadCards,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
           : _cards.isEmpty
-          ? const Center(
-        child: Text('No cards in this folder yet.'),
-      )
+          ? const Center(child: Text('No cards in this folder yet.'))
           : ListView.builder(
-        itemCount: _cards.length,
-        itemBuilder: (context, index) {
-          final card = _cards[index];
+              itemCount: _cards.length,
+              itemBuilder: (context, index) {
+                final card = _cards[index];
 
-          return ListTile(
-            leading: Text(
-              _suitSymbol(card.suit),
-              style: const TextStyle(fontSize: 30),
+                return ListTile(
+                  leading: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: _cardImage(card),
+                  ),
+                  title: Text(card.title),
+                  subtitle: Text('ID: ${card.id} | ${card.suit}'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Edit card',
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _editCard(card),
+                      ),
+                      IconButton(
+                        tooltip: 'Delete card',
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => _deleteCard(card),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            title: Text(card.title),
-            subtitle: Text(
-              'ID: ${card.id} | ${card.suit}',
-            ),
-            trailing: IconButton(
-              tooltip: 'Edit card',
-              icon: const Icon(Icons.edit),
-              onPressed: () => _editCard(card),
-            ),
-          );
-        },
-      ),
     );
   }
 }

@@ -3,11 +3,7 @@ class Folder {
   final String name;
   final String createdAt;
 
-  Folder({
-    this.id,
-    required this.name,
-    required this.createdAt,
-  });
+  Folder({this.id, required this.name, required this.createdAt});
 
   factory Folder.fromMap(Map<String, dynamic> map) {
     return Folder(
@@ -18,10 +14,6 @@ class Folder {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'name': name,
-      'created_at': createdAt,
-    };
+    return {if (id != null) 'id': id, 'name': name, 'created_at': createdAt};
   }
 }
