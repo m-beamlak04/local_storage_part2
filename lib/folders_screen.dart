@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'folder.dart';
+import 'cards_screen.dart';
 
 class FoldersScreen extends StatefulWidget {
   final DatabaseHelper helper;
@@ -219,8 +220,20 @@ class _FoldersScreenState extends State<FoldersScreen> {
             ),
             onTap: _isBusy
                 ? null
-                : () {
-              // We'll open the cards screen here next.
+                : () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CardsScreen(
+                    helper: widget.helper,
+                    folderId: folder['id'] as int,
+                    folderName: folder['name'].toString(),
+                  ),
+                ),
+              );
+
+              if (!mounted) return;
+              await _loadFolders();
             },
           );
         },
