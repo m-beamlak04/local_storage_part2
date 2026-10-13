@@ -124,3 +124,11 @@ Screenshots:
 - `evidence/part2_cards.png` — Card screen showing Compass and the Edit/Delete buttons.
 - `evidence/part2_edit.png` — Edit Card form showing the saved card information.
 
+## Release APK Test
+
+I built the release APK using `flutter build apk --release` and renamed it to `Activity09_Mulugeta_Beamlak.apk`.
+
+I installed the renamed APK on my Android emulator and tested creating, editing, and deleting records. I also tested the missing image fallback and confirmed that the suit symbol appeared. After closing and reopening the app, the saved data was still there.
+
+The release APK installed and worked without errors.
+
